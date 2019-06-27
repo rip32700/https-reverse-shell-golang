@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 )
+
+//go:generate go-bindata -o resources.go resources/...
 
 // constants
 const certPath = "resources" + string(os.PathSeparator) + "server.crt"
@@ -114,6 +117,30 @@ func FileDownload(writer http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(writer, "Successfully downloaded file")
 }
 
+// SetupServer sets up the server with self-signed certs
+func SetupServer(host string) *http.Server {
+	// read cert binary data from bundled assets
+	certData, err := Asset(certPath)
+	if err != nil {
+		fmt.Printf("[-] Error reading cert file: %s\n", err)
+	}
+	// read key binary data from bundled assets
+	keyData, err := Asset(keyPath)
+	if err != nil {
+		fmt.Printf("[-] Error reading cert file: %s\n", err)
+	}
+
+	// create the server with the custom pair
+	cert, err := tls.X509KeyPair(certData, keyData)
+	tlsConfig := &tls.Config{Certificates: []tls.Certificate{cert}}
+	server := http.Server{
+		Addr:      host,
+		TLSConfig: tlsConfig,
+	}
+
+	return &server
+}
+
 func main() {
 	hoststr := fmt.Sprintf("%s:%d", host, port)
 
@@ -125,5 +152,6 @@ func main() {
 
 	// start the server
 	fmt.Printf("[+] Server listening on (%s)\n", hoststr)
-	log.Fatal(http.ListenAndServeTLS(hoststr, certPath, keyPath, nil))
+	server := SetupServer(hoststr)
+	log.Fatal(server.ListenAndServeTLS("", ""))
 }

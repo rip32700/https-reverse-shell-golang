@@ -16,6 +16,8 @@ import (
 	"strings"
 )
 
+//go:generate go-bindata -o resources.go resources/...
+
 // constants
 const certPath = "resources" + string(os.PathSeparator) + "server.crt"
 const host = "https://localhost"
@@ -34,7 +36,7 @@ func SetupClient() *http.Client {
 	client := &http.Client{Transport: transport}
 
 	// load trusted cert path
-	caCert, err := ioutil.ReadFile(certPath)
+	caCert, err := Asset(certPath)
 	if err != nil {
 		panic(err)
 	}
