@@ -66,6 +66,8 @@ func FileUpload(writer http.ResponseWriter, req *http.Request) {
 		fmt.Printf("[-] Error reading the uploaded file: %s\n", err)
 	}
 
+	// create uploads dir if not existant yet
+	_ = os.Mkdir("uploads", 0755)
 	// read data into local file
 	err = ioutil.WriteFile("uploads/"+handler.Filename, bytes, 0755)
 	if err != nil {

