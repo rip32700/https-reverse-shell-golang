@@ -5,8 +5,7 @@ A HTTPS reverse shell implemented in the Go programming language.
 ## Prerequisites
 
 * You need to have ```Golang``` installed on your system and have the variables ```$GOPATH``` and ```$GOBIN``` set.
-* Install ```go-bindata``` via ```$ go get -u github.com/go-bindata/go-bindata/...``` 
-(and install to bin via ```$ go install```)
+* Install ```go-bindata``` via ```$ go get -u github.com/go-bindata/go-bindata/...```
 * Install ```openssl``` in order to generate your cert/key pair.
 
 ## Build
