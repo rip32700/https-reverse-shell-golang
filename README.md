@@ -61,9 +61,11 @@ $ ./payload
 
 The payload calls home to the c2 server in an endless loop until it receives the "quit" command. The c2 requests a command from the user upon beacon from the payload. You can send any CLI arguments and upload/download arguments in the form of:
 
-```CMD > upload <localFilePath>```
+```CMD > upload <localFilePath> <remoteFilePath>```
 
 ```CMD > download <remoteFilePath> <localFilePath>```
+
+(localFilePath := on the target machine, remoteFilePath := on the c2 machine)
 
 The c2 server implements the following endpoints:
 * ```/getcmd``` - Asks the user for a command to send to the payload
