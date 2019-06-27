@@ -61,7 +61,7 @@ func AskForCmd(client *http.Client, url string) string {
 	}
 	fmt.Printf("[+] Got cmd from backend:\n%s\n", body)
 
-	return strings.Trim(string(body), " \n")
+	return strings.Trim(string(body), " \n\r")
 }
 
 // ProcessCmd splits of the flow corresponding to the cmd
