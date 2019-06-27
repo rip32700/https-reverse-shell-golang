@@ -74,3 +74,7 @@ The c2 server implements the following endpoints:
 The communication is encrypted via TLS. The general benefit of a HTTP/S reverse shell over a regular TCP reverse shell is that the traffic looks more legit and thus is stealthier.
 
 
+## Outstanding improvements
+
+* Implement multi-user (multiple payloads) management
+* Implement change directory cmd
